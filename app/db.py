@@ -26,7 +26,20 @@ def save_session(data):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
-        INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sessions (
+            id,
+            model,
+            prompt,
+            parameters,
+            response,
+            prompt_hash,
+            response_hash,
+            session_hash,
+            created_at,
+            integrity_status,
+            signature
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, data)
     conn.commit()
     conn.close()

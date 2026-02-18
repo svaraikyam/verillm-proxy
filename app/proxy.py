@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from app.hashing import sha256_text, compute_session_hash
 from app.db import save_session
+from app.kms_signing import sign_hash
 
 router = APIRouter()
 
@@ -32,7 +33,10 @@ async def proxy_chat(request: Request):
 
     session_hash = compute_session_hash(prompt_hash, response_hash, param_hash)
     session_id = str(uuid.uuid4())
+    signature = sign_hash(session_hash)
+    print("DEBUG SIGNATURE:", signature)
 
+    
     save_session((
         session_id,
         body.get("model"),
@@ -42,7 +46,9 @@ async def proxy_chat(request: Request):
         prompt_hash,
         response_hash,
         session_hash,
-        datetime.utcnow().isoformat()
+        datetime.utcnow().isoformat(),
+        None,  
+        signature
     ))
 
     return result
