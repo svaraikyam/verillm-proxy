@@ -24,9 +24,10 @@ async def proxy_chat(request: Request):
 
     prompt_text = json.dumps(body.get("messages", ""))
     response_text = json.dumps(result)
+    assistant_content = result["choices"][0]["message"]["content"]
 
     prompt_hash = sha256_text(prompt_text)
-    response_hash = sha256_text(response_text)
+    response_hash = sha256_text(assistant_content)
     param_hash = sha256_text(json.dumps(body))
 
     session_hash = compute_session_hash(prompt_hash, response_hash, param_hash)
