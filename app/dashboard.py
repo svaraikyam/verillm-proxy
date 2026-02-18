@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 import sqlite3
 import httpx
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -11,7 +12,7 @@ def dashboard(request: Request):
     conn = sqlite3.connect("verillm.db")
     c = conn.cursor()
     c.execute("""
-        SELECT id, model, created_at
+        SELECT id, model, created_at, integrity_status
         FROM sessions
         ORDER BY created_at DESC
     """)
@@ -87,3 +88,19 @@ async def replay_from_dashboard(request: Request, session_id: str):
             "replay_result": replay_result
         }
     )
+@router.get("/dashboard/export/{session_id}")
+def export_session(session_id: str):
+
+    conn = sqlite3.connect("verillm.db")
+    c = conn.cursor()
+    c.execute("SELECT * FROM sessions WHERE id=?", (session_id,))
+    row = c.fetchone()
+    columns = [description[0] for description in c.description]
+    conn.close()
+
+    if not row:
+        return {"error": "Session not found"}
+
+    data = dict(zip(columns, row))
+
+    return JSONResponse(content=data)

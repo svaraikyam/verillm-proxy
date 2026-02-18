@@ -27,12 +27,24 @@ async def replay(session_id: str):
     parameters = json.loads(parameters_json)
 
     # Re-run inference
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(VLLM_URL, json=parameters)
         new_result = response.json()
 
+    if "choices" not in new_result:
+        return {"error": "Replay inference failed"}
+
     assistant_content = new_result["choices"][0]["message"]["content"]
     new_hash = sha256_text(assistant_content)
+
+    conn = sqlite3.connect("verillm.db")
+    c = conn.cursor()
+    c.execute(
+        "UPDATE sessions SET integrity_status=? WHERE id=?",
+        (str(original_hash == new_hash).lower(), session_id)
+    )
+    conn.commit()
+    conn.close()
 
     return {
         "session_id": session_id,
