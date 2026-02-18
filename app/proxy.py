@@ -18,8 +18,11 @@ async def proxy_chat(request: Request):
     # Deterministic enforcement
     body["temperature"] = 0.0
     body["seed"] = 42
+    body["top_p"] = 1.0
+    body["presence_penalty"] = 0
+    body["frequency_penalty"] = 0
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
         response = await client.post(VLLM_URL, json=body)
         result = response.json()
 
@@ -51,4 +54,7 @@ async def proxy_chat(request: Request):
         signature
     ))
 
-    return result
+    return {
+    "session_id": session_id,
+    **result
+    }

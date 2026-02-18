@@ -104,3 +104,10 @@ def export_session(session_id: str):
     data = dict(zip(columns, row))
 
     return JSONResponse(content=data)
+
+@router.get("/dashboard/chat")
+def chat_page(request: Request):
+    return templates.TemplateResponse(
+        "chat.html",
+        {"request": request}
+    )    
